@@ -1,6 +1,6 @@
 {
-  "name": "oauth4webapi",
-  "version": "2.0.6",
+  "name": "zihan-oauth4webapi",
+  "version": "2.0.7",
   "description": "OAuth 2 / OpenID Connect for Web Platform API JavaScript runtimes",
   "keywords": [
     "auth",
@@ -47,7 +47,7 @@
   ],
   "scripts": {
     "_format": "find src test tap examples conformance -type f -name '*.ts' -o -name '*.mjs' -name '*.cjs' | xargs prettier",
-    "build": "rm -rf build && tsc && tsc --declaration true --emitDeclarationOnly true --removeComments false && tsc -p test && tsc -p examples && tsc -p conformance && tsc -p tap",
+    "build": "rm -rf build && tsc --moduleResolution node && tsc --declaration true --emitDeclarationOnly true --removeComments false --moduleResolution node && tsc -p test --moduleResolution node && tsc -p examples --moduleResolution node && tsc -p conformance --moduleResolution node && tsc -p tap --moduleResolution node",
     "conformance": "bash -c 'source .node_flags.sh && ava --config conformance/ava.config.ts'",
     "docs": "patch-package && typedoc",
     "format": "npm run _format -- --write",

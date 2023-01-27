@@ -822,7 +822,12 @@ export async function calculatePKCECodeChallenge(codeVerifier: string) {
     throw new TypeError('"codeVerifier" must be a non-empty string')
   }
 
-  return b64u(await crypto.subtle.digest({ name: 'SHA-256' }, buf(codeVerifier)))
+  return b64u(
+    await (crypto.subtle ?? (await import('crypto' as any)).subtle).digest(
+      { name: 'SHA-256' },
+      buf(codeVerifier),
+    ),
+  )
 }
 
 interface NormalizedKeyInput {
@@ -1099,7 +1104,13 @@ async function jwt(
     )
   }
   const input = `${b64u(buf(JSON.stringify(header)))}.${b64u(buf(JSON.stringify(claimsSet)))}`
-  const signature = b64u(await crypto.subtle.sign(subtleAlgorithm(key), key, buf(input)))
+  const signature = b64u(
+    await (crypto.subtle ?? (await import('crypto' as any)).subtle).sign(
+      subtleAlgorithm(key),
+      key,
+      buf(input),
+    ),
+  )
   return `${input}.${signature}`
 }
 
@@ -1220,7 +1231,12 @@ async function dpopProofJwt(
       nonce,
       htu: `${url.origin}${url.pathname}`,
       ath: accessToken
-        ? b64u(await crypto.subtle.digest({ name: 'SHA-256' }, buf(accessToken)))
+        ? b64u(
+            await (crypto.subtle ?? (await import('crypto' as any)).subtle).digest(
+              { name: 'SHA-256' },
+              buf(accessToken),
+            ),
+          )
         : undefined,
     },
     privateKey,
@@ -1236,7 +1252,9 @@ async function publicJwk(key: CryptoKey) {
   if (jwkCache.has(key)) {
     return jwkCache.get(key)!
   }
-  const { kty, e, n, x, y, crv } = await crypto.subtle.exportKey('jwk', key)
+  const { kty, e, n, x, y, crv } = await (
+    crypto.subtle ?? (await import('crypto' as any)).subtle
+  ).exportKey('jwk', key)
   const jwk = { kty, e, n, x, y, crv }
   jwkCache.set(key, jwk)
   return jwk
@@ -2810,7 +2828,12 @@ async function validateJwt(
   if (getKey !== noSignatureCheck) {
     const key = await getKey(header)
     const input = `${protectedHeader}.${payload}`
-    const verified = await crypto.subtle.verify(subtleAlgorithm(key), key, signature, buf(input))
+    const verified = await (crypto.subtle ?? (await import('crypto' as any)).subtle).verify(
+      subtleAlgorithm(key),
+      key,
+      signature,
+      buf(input),
+    )
     if (!verified) {
       throw new OPE('JWT signature verification failed')
     }
@@ -3116,7 +3139,13 @@ async function importJwk(alg: JWSAlgorithm, jwk: JWK) {
       throw new UnsupportedOperationError()
   }
 
-  return crypto.subtle.importKey('jwk', key, algorithm, true, ['verify'])
+  return (crypto.subtle ?? (await import('crypto' as any)).subtle).importKey(
+    'jwk',
+    key,
+    algorithm,
+    true,
+    ['verify'],
+  )
 }
 
 export interface DeviceAuthorizationRequestOptions
@@ -3351,6 +3380,10 @@ export async function generateKeyPair(alg: JWSAlgorithm, options?: GenerateKeyPa
   }
 
   return <Promise<CryptoKeyPair>>(
-    crypto.subtle.generateKey(algorithm, options?.extractable ?? false, ['sign', 'verify'])
+    (crypto.subtle ?? (await import('crypto' as any)).subtle).generateKey(
+      algorithm,
+      options?.extractable ?? false,
+      ['sign', 'verify'],
+    )
   )
 }
